@@ -8,46 +8,93 @@
   <script defer src="./face-api.min.js"></script>
   <style>
     body {
-      margin: 0;
+      margin: 1%;
       padding: 0;
       width: 100vw;
       height: 100vh;
       display: flex;
+      flex-direction: column;
       justify-content: center;
       align-items: center;
       overflow: hidden;
     }
 
-    video, canvas {
-      position: absolute;
+    #container {
+      display: flex;
+      flex-direction: column;
+      width: 100%;
+      height: 100%;
+    }
+
+    #video, #canvas {
       width: 100%;
       height: 100%;
       object-fit: cover;
     }
 
-    video {
+    #video {
       transform: scaleX(-1); /* Mirror the video feed */
     }
 
+    #emotion-display {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      border-left: 2px solid black;
+      padding: 10px;
+    }
+
     @media (orientation: portrait) {
-      video, canvas {
-        width: auto;
-        height: 100%;
+      #container {
+        flex-direction: column;
+      }
+
+      #video, #canvas {
+        width: 96%;
+        height: 50%;
+      }
+
+      #emotion-display {
+        width: 96%;
+        height: 50%;
+        border-left: none;
+        border-top: 2px solid black;
       }
     }
 
     @media (orientation: landscape) {
-      video, canvas {
-        width: 100%;
-        height: auto;
+      #container {
+        flex-direction: row;
+      }
+
+      #video, #canvas {
+        width: 50%;
+        height: 96%;
+      }
+
+      #emotion-display {
+        width: 50%;
+        height: 96%;
+        border-top: none;
       }
     }
   </style>
 </head>
 <body>
-  <video id="video" autoplay muted></video>
+  <div id="container">
+    <video id="video" autoplay muted></video>
+    <canvas id="canvas"></canvas>
+    <div id="emotion-display">
+      <p>Make an expression!</p>
+      <p id="counter">3</p>
+    </div>
+  </div>
   <script type="module">
     const video = document.getElementById('video');
+    const canvas = document.getElementById('canvas');
+    const counterElement = document.getElementById('counter');
+    let counter = 3;
 
     Promise.all([
       faceapi.nets.tinyFaceDetector.loadFromUri('./models'),
@@ -63,8 +110,6 @@
     }
 
     video.addEventListener('play', () => {
-      const canvas = faceapi.createCanvasFromMedia(video);
-      document.body.append(canvas);
       const displaySize = { width: video.videoWidth, height: video.videoHeight };
       faceapi.matchDimensions(canvas, displaySize);
 
@@ -77,9 +122,7 @@
         const detections = await faceapi.detectAllFaces(video, new faceapi.TinyFaceDetectorOptions()).withFaceLandmarks().withFaceExpressions();
         const resizedDetections = faceapi.resizeResults(detections, displaySize);
         context.clearRect(0, 0, canvas.width, canvas.height);
-        // faceapi.draw.drawDetections(canvas, resizedDetections);
         faceapi.draw.drawFaceLandmarks(canvas, resizedDetections);
-        // faceapi.draw.drawFaceExpressions(canvas, resizedDetections);
 
         // Get detected emotions
         const emotions = resizedDetections.map(detection => detection.expressions);
@@ -89,7 +132,13 @@
         }, {});
 
         console.log("Detected emotions: ", highestEmotion);
-      }, 300);
+
+        // Update counter
+        if (counter > 0) {
+          counter--;
+          counterElement.textContent = counter;
+        }
+      }, 1000);
     });
   </script>
 </body>
