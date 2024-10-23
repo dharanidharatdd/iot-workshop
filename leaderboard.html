@@ -74,21 +74,13 @@
 <script>
     document.addEventListener('DOMContentLoaded', async () => {
         const leaderboardBody = document.getElementById('leaderboard-body');
-        const token = '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'; // Replace with your GitHub token
         const repo = 'dharanidharatdd/iot-workshop'; // Replace with your GitHub username and repository name
         const path = 'assets/leaderboard.json';
-        const apiUrl = `https://api.github.com/repos/${repo}/contents/${path}`;
+        const apiUrl = `https://${repo}.github.io/${path}`;
 
         // Fetch the leaderboard data
-        const response = await fetch(apiUrl, {
-            headers: {
-                'Authorization': `token ${token}`,
-                'Accept': 'application/vnd.github.v3+json'
-            }
-        });
-        const data = await response.json();
-        const content = atob(data.content);
-        const players = JSON.parse(content);
+        const response = await fetch(apiUrl);
+        const players = await response.json();
 
         // Sort players by score in descending order
         players.sort((a, b) => b.score - a.score);
