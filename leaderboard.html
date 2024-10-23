@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>Leaderboard</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      width: 100vw;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      overflow: hidden;
+    }
+
+    table {
+      width: 50%;
+      border-collapse: collapse;
+    }
+
+    th, td {
+      border: 1px solid black;
+      padding: 8px;
+      text-align: center;
+    }
+
+    th {
+      background-color: #f2f2f2;
+    }
+  </style>
+</head>
+<body>
+  <h1>Leaderboard</h1>
+  <table id="leaderboard">
+    <thead>
+      <tr>
+        <th>Username</th>
+        <th>Score</th>
+      </tr>
+    </thead>
+    <tbody>
+      <!-- Leaderboard entries will be added here -->
+    </tbody>
+  </table>
+
+  <script>
+    const leaderboard = document.getElementById('leaderboard').querySelector('tbody');
+    const username = localStorage.getItem('username');
+    const score = localStorage.getItem('score');
+
+    function updateLeaderboard() {
+      const row = document.createElement('tr');
+      const usernameCell = document.createElement('td');
+      const scoreCell = document.createElement('td');
+      usernameCell.textContent = username;
+      scoreCell.textContent = score;
+      row.appendChild(usernameCell);
+      row.appendChild(scoreCell);
+      leaderboard.appendChild(row);
+    }
+
+    updateLeaderboard();
+  </script>
+</body>
+</html>
