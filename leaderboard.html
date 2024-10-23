@@ -72,9 +72,23 @@
 <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js"></script>
 <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
 <script>
-    document.addEventListener('DOMContentLoaded', () => {
+    document.addEventListener('DOMContentLoaded', async () => {
         const leaderboardBody = document.getElementById('leaderboard-body');
-        const players = JSON.parse(localStorage.getItem('players')) || [];
+        const token = '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'; // Replace with your GitHub token
+        const repo = 'dharanidharatdd/iot-workshop'; // Replace with your GitHub username and repository name
+        const path = 'leaderboard.json';
+        const apiUrl = `https://api.github.com/repos/${repo}/contents/${path}`;
+
+        // Fetch the leaderboard data
+        const response = await fetch(apiUrl, {
+            headers: {
+                'Authorization': `token ${token}`,
+                'Accept': 'application/vnd.github.v3+json'
+            }
+        });
+        const data = await response.json();
+        const content = atob(data.content);
+        const players = JSON.parse(content);
 
         // Sort players by score in descending order
         players.sort((a, b) => b.score - a.score);
@@ -103,6 +117,7 @@
             // Set player name and profile image
             nameTd.classList.add('profile');
             nameTd.innerHTML = `
+                <div class="profile-img"><img src="Profle.png" alt="${player.name}"></div>
                 <div class="name ml-2">${player.name}</div>
             `;
 

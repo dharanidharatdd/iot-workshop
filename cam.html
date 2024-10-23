@@ -204,11 +204,41 @@
       gameOverDisplay.style.display = 'flex';
     }
 
-    // Save the score to localStorage
-    function saveScore(username, score) {
-      let players = JSON.parse(localStorage.getItem('players')) || [];
+    // Save the score to GitHub
+    async function saveScore(username, score) {
+      const token = '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'; // Replace with your GitHub token
+      const repo = 'dharanidharatdd/iot-workshop'; // Replace with your GitHub username and repository name
+      const path = 'leaderboard.json';
+      const apiUrl = `https://api.github.com/repos/${repo}/contents/${path}`;
+
+      // Fetch the current leaderboard data
+      const response = await fetch(apiUrl, {
+        headers: {
+          'Authorization': `token ${token}`,
+          'Accept': 'application/vnd.github.v3+json'
+        }
+      });
+      const data = await response.json();
+      const content = atob(data.content);
+      const players = JSON.parse(content);
+
+      // Add the new score
       players.push({ name: username, score: score });
-      localStorage.setItem('players', JSON.stringify(players));
+
+      // Update the leaderboard data
+      const updatedContent = btoa(JSON.stringify(players, null, 2));
+      await fetch(apiUrl, {
+        method: 'PUT',
+        headers: {
+          'Authorization': `token ${token}`,
+          'Accept': 'application/vnd.github.v3+json'
+        },
+        body: JSON.stringify({
+          message: 'Update leaderboard',
+          content: updatedContent,
+          sha: data.sha
+        })
+      });
     }
 
     // Initialize the application
