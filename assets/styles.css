@@ -1,0 +1,197 @@
+/* General body styling */
+body {
+  margin: 1%;
+  padding: 0;
+  width: 100vw;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  overflow: hidden;
+}
+
+/* Container for video and canvas elements */
+#container {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  transition: opacity 1s ease-in-out;
+}
+
+/* Video and canvas elements styling */
+#video, #canvas {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 12px;
+}
+
+/* Mirror the video feed */
+#video {
+  transform: scaleX(-1);
+}
+
+/* Canvas styling */
+#canvas {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 1;
+  pointer-events: none; /* Ensure the canvas does not interfere with video controls */
+}
+
+/* Emotion display styling */
+#emotion-display {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 10px;
+}
+
+/* Portrait orientation styling */
+@media (orientation: portrait) {
+  #container {
+    flex-direction: column;
+  }
+
+  #video, #canvas {
+    width: 96%;
+    height: 50%;
+    margin: auto; /* Center horizontally */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+
+  #emotion-display {
+    width: 96%;
+    height: 50%;
+  }
+
+  #capture-display {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    width: 80%;
+    margin: auto;
+  }
+
+  #captured-image {
+    width: 100%;
+    max-width: 300px;
+    height: auto;
+    border-radius: 12px;
+  }
+}
+
+/* Landscape orientation styling */
+@media (orientation: landscape) {
+  #container {
+    flex-direction: row;
+  }
+
+  #video, #canvas {
+    width: 50%;
+    height: 96%;
+  }
+
+  #emotion-display {
+    width: 50%;
+    height: 96%;
+  }
+
+  #capture-display {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    width: 50%;
+    margin: auto;
+  }
+
+  #captured-image {
+    width: 100%;
+    max-width: 300px;
+    height: auto;
+    border-radius: 12px;
+  }
+}
+
+/* Animation for sliding out the canvas */
+@keyframes slideOut {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-100%);
+  }
+}
+
+/* Class to trigger the slide-out animation */
+.slide-out {
+  animation: slideOut 1s forwards;
+}
+
+/* Loading overlay styles */
+#loading-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  z-index: 2;
+  color: white;
+  font-size: 1.5em;
+}
+
+/* Spinner styles */
+.spinner {
+  border: 16px solid #f3f3f3;
+  border-top: 16px solid #3498db;
+  border-radius: 50%;
+  width: 120px;
+  height: 120px;
+  animation: spin 2s linear infinite;
+}
+
+/* Animation for the spinner */
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Fade-out animation for capture display */
+@keyframes fadeOut {
+  0% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+/* Class to trigger the fade-out animation */
+.fade-out {
+  animation: fadeOut 1s forwards;
+}
+
+/* Game Over display styling */
+#game-over {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 3em;
+  font-weight: bold;
+  color: red;
+  height: 100vh;
+}

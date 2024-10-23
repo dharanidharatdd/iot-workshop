@@ -1,70 +1,130 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta http-equiv="X-UA-Compatible" content="ie=edge">
-  <title>Leaderboard</title>
-  <style>
-    body {
-      margin: 0;
-      padding: 0;
-      width: 100vw;
-      height: 100vh;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-      overflow: hidden;
-    }
-
-    table {
-      width: 50%;
-      border-collapse: collapse;
-    }
-
-    th, td {
-      border: 1px solid black;
-      padding: 8px;
-      text-align: center;
-    }
-
-    th {
-      background-color: #f2f2f2;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Responsive Leaderboard with Icons</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        body {
+            background-color: #f4f4f4;
+        }
+        .leaderboard-container {
+            margin: 50px auto;
+            background-color: #fff;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            padding: 30px;
+        }
+        .leaderboard-title {
+            background-color: #014a67;
+            color: white;
+            padding: 20px;
+            border-radius: 10px 10px 0 0;
+        }
+        .rank-icon i {
+            font-size: 30px;
+        }
+        .gold {
+            color: #f1c40f;
+        }
+        .silver {
+            color: #bdc3c7;
+        }
+        .bronze {
+            color: #cd7f32;
+        }
+        .profile-img img {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+        }
+        .profile {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+    </style>
 </head>
 <body>
-  <h1>Leaderboard</h1>
-  <table id="leaderboard">
-    <thead>
-      <tr>
-        <th>Username</th>
-        <th>Score</th>
-      </tr>
-    </thead>
-    <tbody>
-      <!-- Leaderboard entries will be added here -->
-    </tbody>
-  </table>
 
-  <script>
-    const leaderboard = document.getElementById('leaderboard').querySelector('tbody');
-    const username = localStorage.getItem('username');
-    const score = localStorage.getItem('score');
+<div class="container leaderboard-container">
+    <h1 class="leaderboard-title text-center">Leaderboard</h1>
+    <table class="table table-bordered mt-4 text-center">
+        <thead class="thead-light">
+            <tr>
+                <th>Rank</th>
+                <th>Name</th>
+                <th>Score</th>
+            </tr>
+        </thead>
+        <tbody id="leaderboard-body">
+            <!-- Leaderboard entries will be dynamically inserted here -->
+        </tbody>
+    </table>
+</div>
 
-    function updateLeaderboard() {
-      const row = document.createElement('tr');
-      const usernameCell = document.createElement('td');
-      const scoreCell = document.createElement('td');
-      usernameCell.textContent = username;
-      scoreCell.textContent = score;
-      row.appendChild(usernameCell);
-      row.appendChild(scoreCell);
-      leaderboard.appendChild(row);
-    }
+<!-- Bootstrap JS and dependencies (optional for functionality) -->
+<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const leaderboardBody = document.getElementById('leaderboard-body');
+        const players = JSON.parse(localStorage.getItem('players')) || [];
 
-    updateLeaderboard();
-  </script>
+        // Sort players by score in descending order
+        players.sort((a, b) => b.score - a.score);
+
+        // Limit to top 10 players
+        const topPlayers = players.slice(0, 10);
+
+        // Generate leaderboard rows
+        topPlayers.forEach((player, index) => {
+            const tr = document.createElement('tr');
+            const rankTd = document.createElement('td');
+            const nameTd = document.createElement('td');
+            const scoreTd = document.createElement('td');
+
+            // Set rank with icons for top 3
+            if (index === 0) {
+                rankTd.innerHTML = '<i class="fas fa-trophy gold"></i>';
+            } else if (index === 1) {
+                rankTd.innerHTML = '<i class="fas fa-medal silver"></i>';
+            } else if (index === 2) {
+                rankTd.innerHTML = '<i class="fas fa-medal bronze"></i>';
+            } else {
+                rankTd.textContent = `${index + 1}${getOrdinalSuffix(index + 1)}`;
+            }
+
+            // Set player name and profile image
+            nameTd.classList.add('profile');
+            nameTd.innerHTML = `
+                <div class="name ml-2">${player.name}</div>
+            `;
+
+            // Set player score and round off to 2 decimals
+            scoreTd.textContent = parseFloat(player.score).toFixed(2);
+
+            // Append cells to row
+            tr.appendChild(rankTd);
+            tr.appendChild(nameTd);
+            tr.appendChild(scoreTd);
+
+            // Append row to leaderboard body
+            leaderboardBody.appendChild(tr);
+        });
+
+        // Function to get ordinal suffix for a number
+        function getOrdinalSuffix(n) {
+            const s = ["th", "st", "nd", "rd"],
+                v = n % 100;
+            return s[(v - 20) % 10] || s[v] || s[0];
+        }
+    });
+</script>
 </body>
 </html>

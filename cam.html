@@ -5,111 +5,58 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="X-UA-Compatible" content="ie=edge">
   <title>Face Recognition</title>
+  <!-- Load face-api.js library -->
   <script defer src="./face-api.min.js"></script>
-  <style>
-    body {
-      margin: 1%;
-      padding: 0;
-      width: 100vw;
-      height: 100vh;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-      overflow: hidden;
-    }
-
-    #container {
-      position: relative;
-      width: 100%;
-      height: 100%;
-      display: flex;
-      flex-direction: column;
-    }
-
-    #video, #canvas {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-    }
-
-    #video {
-      transform: scaleX(-1); /* Mirror the video feed */
-    }
-
-    #canvas {
-      position: absolute;
-      top: 0;
-      left: 0;
-      z-index: 1;
-      pointer-events: none; /* Ensure the canvas does not interfere with video controls */
-    }
-
-    #emotion-display {
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-      border-left: 2px solid black;
-      padding: 10px;
-    }
-
-    @media (orientation: portrait) {
-      #container {
-        flex-direction: column;
-      }
-
-      #video, #canvas {
-        width: 96%;
-        height: 50%;
-      }
-
-      #emotion-display {
-        width: 96%;
-        height: 50%;
-        border-left: none;
-        border-top: 2px solid black;
-      }
-    }
-
-    @media (orientation: landscape) {
-      #container {
-        flex-direction: row;
-      }
-
-      #video, #canvas {
-        width: 50%;
-        height: 96%;
-      }
-
-      #emotion-display {
-        width: 50%;
-        height: 96%;
-        border-top: none;
-      }
-    }
-  </style>
+  <!-- Link to external CSS file -->
+  <link rel="stylesheet" href="./assets/styles.css">
 </head>
 <body>
   <div id="container">
+    <!-- Loading overlay -->
+    <div id="loading-overlay">
+      <div class="spinner"></div>
+      <p>Please wait, model is loading...</p>
+    </div>
+    <!-- Video element to display webcam feed -->
     <video id="video" autoplay muted></video>
+    <!-- Canvas element to draw face landmarks and captured images -->
     <canvas id="canvas"></canvas>
+    <!-- Display area for current expression and counter -->
     <div id="emotion-display">
       <p id="expression">Make an expression!</p>
       <p id="counter">5</p>
     </div>
   </div>
+  <!-- Container to display captured image and expression -->
+  <div id="capture-display" class="container" style="display: none;">
+    <img id="captured-image" src="" alt="Captured Expression">
+    <div id="captured-text" class="text"></div>
+  </div>
+  <!-- Game Over message -->
+  <div id="game-over" class="container" style="display: none;">
+    <p>Game Over!</p>
+  </div>
   <script type="module">
+    // Get references to HTML elements
     const video = document.getElementById('video');
     const canvas = document.getElementById('canvas');
     const expressionElement = document.getElementById('expression');
     const counterElement = document.getElementById('counter');
+    const loadingOverlay = document.getElementById('loading-overlay');
+    const captureDisplay = document.getElementById('capture-display');
+    const capturedImage = document.getElementById('captured-image');
+    const capturedText = document.getElementById('captured-text');
+    const container = document.getElementById('container');
+    const gameOverDisplay = document.getElementById('game-over');
     let counter = 5;
-    let score = 0;
+    let totalScore = 0;
     const username = localStorage.getItem('username');
+    let detectionInterval;
 
-    const expressions = ['happy', 'angry', 'sad', 'neutral', 'disgusted'];
+    // List of expressions to be displayed
+    const expressions = ['happy', 'angry', 'sad', 'neutral', 'surprised'];
 
+    // Load face-api.js models
     async function loadModels() {
       await faceapi.nets.tinyFaceDetector.loadFromUri('./models');
       await faceapi.nets.faceLandmark68Net.loadFromUri('./models');
@@ -117,61 +64,163 @@
       await faceapi.nets.faceExpressionNet.loadFromUri('./models');
     }
 
+    // Start the webcam video feed
     function startVideo() {
       navigator.mediaDevices.getUserMedia({ video: {} })
-        .then(stream => video.srcObject = stream)
+        .then(stream => {
+          video.srcObject = stream;
+          videoStream = stream;
+        })
         .catch(err => console.error(err));
     }
 
-    function startGame() {
-      const randomExpression = expressions[Math.floor(Math.random() * expressions.length)];
-      expressionElement.textContent = `Make a ${randomExpression} expression!`;
-
-      const interval = setInterval(() => {
-        if (counter > 0) {
-          counter--;
-          counterElement.textContent = counter;
-        } else {
-          clearInterval(interval);
-          captureImage(randomExpression);
-        }
-      }, 1000);
-    }
-
-    async function captureImage(expression) {
-      const displaySize = { width: video.videoWidth, height: video.videoHeight };
-      faceapi.matchDimensions(canvas, displaySize);
-
-      const context = canvas.getContext('2d');
-      context.translate(canvas.width, 0);
-      context.scale(-1, 1);
-
-      const detections = await faceapi.detectAllFaces(video, new faceapi.TinyFaceDetectorOptions()).withFaceLandmarks().withFaceExpressions();
-      const resizedDetections = faceapi.resizeResults(detections, displaySize);
-      context.clearRect(0, 0, canvas.width, canvas.height);
-      faceapi.draw.drawFaceLandmarks(canvas, resizedDetections);
-
-      const emotions = resizedDetections.map(detection => detection.expressions);
-      const highestEmotion = emotions.reduce((acc, cur) => {
-        const maxEmotion = Object.keys(cur).reduce((a, b) => cur[a] > cur[b] ? a : b);
-        return { ...acc, [maxEmotion]: cur[maxEmotion] };
-      }, {});
-
-      score += highestEmotion[expression] || 0;
-
-      if (score >= 5) {
-        localStorage.setItem('score', score);
-        window.location.href = 'leaderboard.html';
-      } else {
-        counter = 5;
-        startGame();
+    // Shuffle the array of expressions
+    function shuffleArray(array) {
+      for (let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]];
       }
     }
 
+    // Start the game by displaying expressions one by one
+    function startGame() {
+      shuffleArray(expressions);
+      let currentExpressionIndex = 0;
+
+      function showNextExpression() {
+        if (currentExpressionIndex < expressions.length) {
+          const currentExpression = expressions[currentExpressionIndex];
+          expressionElement.textContent = `Make a ${currentExpression} expression!`;
+          counter = 5;
+          counterElement.textContent = counter;
+
+          const interval = setInterval(() => {
+            if (counter > 0) {
+              counter--;
+              counterElement.textContent = counter;
+            } else {
+              clearInterval(interval);
+              captureAndShowImage(currentExpression);
+              currentExpressionIndex++;
+              setTimeout(() => {
+                captureDisplay.classList.add('fade-out');
+                setTimeout(() => {
+                  captureDisplay.classList.remove('fade-out');
+                  captureDisplay.style.display = 'none';
+                  container.style.display = 'flex';
+                  showNextExpression();
+                }, 1000); // Duration of the fade-out animation
+              }, 2000); // Show the captured image for 2 seconds before transitioning
+            }
+          }, 1000);
+        } else {
+          expressionElement.textContent = 'Game Over!';
+          saveScore(username, totalScore);
+          stopDetection();
+        }
+      }
+
+      showNextExpression();
+    }
+
+    // Capture the current frame from the video and display it on the canvas
+    async function captureAndShowImage(expression) {
+      const displaySize = { width: video.videoWidth, height: video.videoHeight };
+      faceapi.matchDimensions(canvas, displaySize);
+
+      const detections = await faceapi.detectAllFaces(video, new faceapi.TinyFaceDetectorOptions()).withFaceLandmarks().withFaceExpressions();
+      const resizedDetections = faceapi.resizeResults(detections, displaySize);
+
+      const context = canvas.getContext('2d');
+      context.clearRect(0, 0, canvas.width, canvas.height);
+
+      // Save the current context state
+      context.save();
+      context.translate(canvas.width, 0);
+      context.scale(-1, 1); // Mirror the canvas
+
+      // Draw the current frame from the video without landmarks
+      context.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+      // Restore the context to its original state
+      context.restore();
+
+      // Convert the canvas to an image and display it
+      const dataUrl = canvas.toDataURL('image/png');
+      capturedImage.src = dataUrl;
+      capturedText.textContent = `Your ${expression} expression`;
+      captureDisplay.style.display = 'block';
+      container.style.display = 'none';
+
+      // Get the score for the current expression
+      let expressionScore = 0;
+      if (detections.length > 0) {
+        const expressions = detections[0].expressions;
+        expressionScore = expressions[expression] || 0;
+      }
+
+      // Add the score to the total score
+      totalScore += expressionScore;
+
+      // Log the captured emotion and score
+      console.log(`Captured image for expression: ${expression}, Score: ${expressionScore}, Total Score: ${totalScore}`);
+    }
+
+    // Continuously detect faces and draw landmarks on the canvas
+    async function detectFaces() {
+      const displaySize = { width: video.videoWidth, height: video.videoHeight };
+      faceapi.matchDimensions(canvas, displaySize);
+
+      detectionInterval = setInterval(async () => {
+        const detections = await faceapi.detectAllFaces(video, new faceapi.TinyFaceDetectorOptions()).withFaceLandmarks().withFaceExpressions();
+        const resizedDetections = faceapi.resizeResults(detections, displaySize);
+
+        const context = canvas.getContext('2d');
+        context.clearRect(0, 0, canvas.width, canvas.height);
+
+        // Save the current context state
+        context.save();
+        context.translate(canvas.width, 0);
+        context.scale(-1, 1); // Mirror the canvas
+
+        // Draw the face landmarks
+        faceapi.draw.drawFaceLandmarks(canvas, resizedDetections);
+
+        // Restore the context to its original state
+        context.restore();
+      }, 100);
+    }
+
+    // Stop face detection and hide the canvas, video, and camera
+    function stopDetection() {
+      clearInterval(detectionInterval);
+      if (video.srcObject) {
+        video.srcObject.getTracks().forEach(track => track.stop());
+      }
+      canvas.remove();
+      video.remove();
+      expressionElement.remove();
+      counterElement.remove();
+      gameOverDisplay.style.display = 'flex';
+    }
+
+    // Save the score to localStorage
+    function saveScore(username, score) {
+      let players = JSON.parse(localStorage.getItem('players')) || [];
+      players.push({ name: username, score: score });
+      localStorage.setItem('players', JSON.stringify(players));
+    }
+
+    // Initialize the application
     document.addEventListener('DOMContentLoaded', async () => {
       await loadModels();
       startVideo();
-      startGame();
+      video.addEventListener('loadedmetadata', () => {
+        // Hide the loading overlay once models are loaded and video metadata is ready
+        loadingOverlay.style.display = 'none';
+        startGame();
+        detectFaces();
+      });
     });
   </script>
 </body>
