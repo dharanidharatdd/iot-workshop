@@ -45,6 +45,7 @@
     const capturedText = document.getElementById('captured-text');
     const container = document.getElementById('container');
     const gameOverDisplay = document.getElementById('game-over');
+    const totalScoreDisplay = document.getElementById('total-score');
     let counter = 5;
     let totalScore = 0;
     const username = localStorage.getItem('username');
@@ -93,7 +94,7 @@
       function showNextExpression() {
         if (currentExpressionIndex < expressions.length) {
           const currentExpression = expressions[currentExpressionIndex];
-          expressionElement.innerHTML = `<strong>Make a ${currentExpression.name} expression! ${currentExpression.emoji}</strong>`;
+          expressionElement.innerHTML = `<h2>Make a ${currentExpression.name} expression! ${currentExpression.emoji}</h2>`;
           counter = 5;
           counterElement.textContent = counter;
 
@@ -121,8 +122,9 @@
           stopDetection();
           saveScore(username, totalScore);
           setUserPlayedState(username, true);
-          gameOverDisplay.innerHTML = `<p>Game Over!</p><p>Total Score: ${totalScore.toFixed(2)}</p>`;
-          gameOverDisplay.style.display = 'flex';
+          totalScoreDisplay.innerHTML = `<p>Total Score: ${totalScore.toFixed(2)}</p>`;
+            gameOverDisplay.style.display = 'flex';
+            gameOverDisplay.style.flexDirection = 'column';
         }
       }
 
@@ -279,6 +281,7 @@
   </div>
   <!-- Game Over message -->
   <div id="game-over" class="container" style="display: none;">
+    <div id="total-score"></div>
     <p>Game Over!</p>
   </div>
 </body>
