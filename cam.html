@@ -14,6 +14,7 @@
     // Import the functions you need from the SDKs you need
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
     import { getDatabase, ref, set, push, get } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-database.js";
+    import { getStorage, ref as storageRef, uploadString, getDownloadURL } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-storage.js";
 
     // Your web app's Firebase configuration
     const firebaseConfig = {
@@ -30,6 +31,7 @@
     // Initialize Firebase
     const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
+    const storage = getStorage(app);
 
     // Declare the videoStream variable
     let videoStream;
@@ -123,8 +125,8 @@
           saveScore(username, totalScore);
           setUserPlayedState(username, true);
           totalScoreDisplay.innerHTML = `<p>Total Score: ${totalScore.toFixed(2)}</p>`;
-            gameOverDisplay.style.display = 'flex';
-            gameOverDisplay.style.flexDirection = 'column';
+          gameOverDisplay.style.display = 'flex';
+          gameOverDisplay.style.flexDirection = 'column';
         }
       }
 
@@ -164,8 +166,16 @@
       // Add the score to the total score
       totalScore += expressionScore;
 
+      // Upload the captured image to Firebase Storage
+      const filename = `${username}-${expression.name}-${expressionScore.toFixed(2)}.png`;
+      const storageReference = storageRef(storage, `images/${filename}`);
+      await uploadString(storageReference, dataUrl, 'data_url');
+
+      // Get the download URL of the uploaded image
+      const downloadURL = await getDownloadURL(storageReference);
+
       // Log the captured emotion and score
-      console.log(`Captured image for expression: ${expression.name}, Score: ${expressionScore}, Total Score: ${totalScore}`);
+      console.log(`Captured image for expression: ${expression.name}, Score: ${expressionScore}, Total Score: ${totalScore}, Image URL: ${downloadURL}`);
     }
 
     // Continuously detect faces and draw landmarks on the canvas
