@@ -3,7 +3,179 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Responsive Leaderboard with Icons</title>
+    <title>Leaderboard</title>
+    <!-- Firebase SDK -->
+    <script type="module">
+        // Import the functions you need from the SDKs you need
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
+        import { getDatabase, ref, onValue, set, query, orderByChild, get, remove } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-database.js";
+        import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
+
+        // Your web app's Firebase configuration
+        const firebaseConfig = {
+          apiKey: "AIzaSyAb2Y-eni-EwsMHB6p7s45SliloUXgyTe8",
+          authDomain: "mimic-master-3b78d.firebaseapp.com",
+          databaseURL: "https://mimic-master-3b78d-default-rtdb.firebaseio.com",
+          projectId: "mimic-master-3b78d",
+          storageBucket: "mimic-master-3b78d.appspot.com",
+          messagingSenderId: "1067863388568",
+          appId: "1:1067863388568:web:679a6f748f589319ccbbed",
+          measurementId: "G-1VE53HXVFP"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+        const auth = getAuth(app);
+
+        // Function to authenticate admin
+        async function adminLogin(email, password) {
+          try {
+            await signInWithEmailAndPassword(auth, email, password);
+            document.getElementById('admin-login-form').style.display = 'none';
+            document.getElementById('leaderboard').style.display = 'block';
+            loadLeaderboard();
+            checkGameState();
+          } catch (error) {
+            alert('Invalid email or password');
+          }
+        }
+
+        // Function to load leaderboard data
+        function loadLeaderboard() {
+          const leaderboardBody = document.getElementById('leaderboard-body');
+          const scoresRef = query(ref(db, 'scores'), orderByChild('score'));
+          onValue(scoresRef, (snapshot) => {
+            leaderboardBody.innerHTML = ''; // Clear existing leaderboard entries
+            const scores = [];
+            snapshot.forEach(childSnapshot => {
+              scores.push(childSnapshot.val());
+            });
+            scores.reverse(); // To display highest scores first
+            scores.forEach((player, index) => {
+              const tr = document.createElement('tr');
+              const rankTd = document.createElement('td');
+              const nameTd = document.createElement('td');
+              const scoreTd = document.createElement('td');
+
+              // Set rank with icons for top 3
+              if (index === 0) {
+                rankTd.innerHTML = '<i class="fas fa-trophy gold"></i>';
+              } else if (index === 1) {
+                rankTd.innerHTML = '<i class="fas fa-medal silver"></i>';
+              } else if (index === 2) {
+                rankTd.innerHTML = '<i class="fas fa-medal bronze"></i>';
+              } else {
+                rankTd.textContent = `${index + 1}${getOrdinalSuffix(index + 1)}`;
+              }
+
+              // Set player name
+              nameTd.textContent = player.username;
+
+              // Set player score and round off to 2 decimals
+              scoreTd.textContent = parseFloat(player.score).toFixed(2);
+
+              // Append cells to row
+              tr.appendChild(rankTd);
+              tr.appendChild(nameTd);
+              tr.appendChild(scoreTd);
+
+              // Append row to leaderboard body
+              leaderboardBody.appendChild(tr);
+            });
+          });
+
+          // Function to get ordinal suffix for a number
+          function getOrdinalSuffix(n) {
+            const s = ["th", "st", "nd", "rd"],
+              v = n % 100;
+            return s[(v - 20) % 10] || s[v] || s[0];
+          }
+        }
+
+        // Function to check game state and update button
+        async function checkGameState() {
+          const gameStateRef = ref(db, 'gameState/state');
+          const snapshot = await get(gameStateRef);
+          const isGameOpen = snapshot.val().isGameOpen;
+          const openGameButton = document.getElementById('open-game-button');
+          if (isGameOpen) {
+            openGameButton.textContent = 'Close Game';
+            openGameButton.classList.remove('btn-success');
+            openGameButton.classList.add('btn-danger');
+          } else {
+            openGameButton.textContent = 'Open Game';
+            openGameButton.classList.remove('btn-danger');
+            openGameButton.classList.add('btn-success');
+          }
+        }
+
+        // Event listener for login form submission
+        document.addEventListener('DOMContentLoaded', () => {
+          onAuthStateChanged(auth, (user) => {
+            if (user) {
+              document.getElementById('admin-login-form').style.display = 'none';
+              document.getElementById('leaderboard').style.display = 'block';
+              loadLeaderboard();
+              checkGameState();
+            } else {
+              document.getElementById('admin-login-form').style.display = 'block';
+              document.getElementById('leaderboard').style.display = 'none';
+            }
+          });
+
+          document.getElementById('login-button').addEventListener('click', (event) => {
+            event.preventDefault();
+            const email = document.getElementById('admin-email').value;
+            const password = document.getElementById('admin-password').value;
+            adminLogin(email, password);
+          });
+
+          document.getElementById('open-game-button').addEventListener('click', async () => {
+            const gameStateRef = ref(db, 'gameState/state');
+            const snapshot = await get(gameStateRef);
+            const isGameOpen = snapshot.val().isGameOpen;
+            const openGameButton = document.getElementById('open-game-button');
+            if (isGameOpen) {
+              await set(gameStateRef, { isGameOpen: false });
+              openGameButton.textContent = 'Open Game';
+              openGameButton.classList.remove('btn-danger');
+              openGameButton.classList.add('btn-success');
+              alert('Game is now closed.');
+            } else {
+              await set(gameStateRef, { isGameOpen: true });
+              openGameButton.textContent = 'Close Game';
+              openGameButton.classList.remove('btn-success');
+              openGameButton.classList.add('btn-danger');
+              alert('Game is now open for players.');
+            }
+          });
+
+          document.getElementById('restart-game-button').addEventListener('click', async () => {
+            const scoresRef = ref(db, 'scores');
+            const userPlayedRef = ref(db, 'userPlayed');
+            const gameStateRef = ref(db, 'gameState/state');
+            
+            // Remove all scores
+            await remove(scoresRef);
+            
+            // Remove all userPlayed states
+            await remove(userPlayedRef);
+            
+            // Reset the game state
+            await set(gameStateRef, { isGameOpen: false });
+            await set(gameStateRef, { isGameOpen: true });
+            
+            alert('Game has been restarted.');
+          });
+
+          document.getElementById('logout-button').addEventListener('click', async () => {
+            await signOut(auth);
+            document.getElementById('admin-login-form').style.display = 'block';
+            document.getElementById('leaderboard').style.display = 'none';
+          });
+        });
+    </script>
     <!-- Bootstrap CSS -->
     <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
     <!-- Font Awesome for icons -->
@@ -37,101 +209,43 @@
         .bronze {
             color: #cd7f32;
         }
-        .profile-img img {
-            width: 60px;
-            height: 60px;
-            border-radius: 50%;
-        }
-        .profile {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
     </style>
 </head>
 <body>
 
 <div class="container leaderboard-container">
     <h1 class="leaderboard-title text-center">Leaderboard</h1>
-    <table class="table table-bordered mt-4 text-center">
-        <thead class="thead-light">
-            <tr>
-                <th>Rank</th>
-                <th>Name</th>
-                <th>Score</th>
-            </tr>
-        </thead>
-        <tbody id="leaderboard-body">
-            <!-- Leaderboard entries will be dynamically inserted here -->
-        </tbody>
-    </table>
+    <form id="admin-login-form" class="text-center mb-4">
+        <label for="admin-email">Email:</label>
+        <input type="email" id="admin-email" name="admin-email" required>
+        <label for="admin-password">Password:</label>
+        <input type="password" id="admin-password" name="admin-password" required>
+        <button type="button" id="login-button" class="btn btn-primary">Login</button>
+    </form>
+    <div id="leaderboard" style="display: none;">
+        <table class="table table-bordered mt-4 text-center">
+            <thead class="thead-light">
+                <tr>
+                    <th>Rank</th>
+                    <th>Name</th>
+                    <th>Score</th>
+                </tr>
+            </thead>
+            <tbody id="leaderboard-body">
+                <!-- Leaderboard entries will be dynamically inserted here -->
+            </tbody>
+        </table>
+        <div class="text-center mt-4">
+            <button id="open-game-button" class="btn btn-success mb-2">Open Game</button>
+            <button id="restart-game-button" class="btn btn-warning mb-2">Restart Game</button>
+            <button id="logout-button" class="btn btn-danger mb-2">Logout</button>
+        </div>
+    </div>
 </div>
 
 <!-- Bootstrap JS and dependencies (optional for functionality) -->
 <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js"></script>
 <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
-<script>
-    document.addEventListener('DOMContentLoaded', async () => {
-        const leaderboardBody = document.getElementById('leaderboard-body');
-        const repo = 'dharanidharatdd/iot-workshop'; // Replace with your GitHub username and repository name
-        const path = 'assets/leaderboard.json';
-        const apiUrl = `https://${repo}.github.io/${path}`;
-
-        // Fetch the leaderboard data
-        const response = await fetch(apiUrl);
-        const players = await response.json();
-
-        // Sort players by score in descending order
-        players.sort((a, b) => b.score - a.score);
-
-        // Limit to top 10 players
-        const topPlayers = players.slice(0, 10);
-
-        // Generate leaderboard rows
-        topPlayers.forEach((player, index) => {
-            const tr = document.createElement('tr');
-            const rankTd = document.createElement('td');
-            const nameTd = document.createElement('td');
-            const scoreTd = document.createElement('td');
-
-            // Set rank with icons for top 3
-            if (index === 0) {
-                rankTd.innerHTML = '<i class="fas fa-trophy gold"></i>';
-            } else if (index === 1) {
-                rankTd.innerHTML = '<i class="fas fa-medal silver"></i>';
-            } else if (index === 2) {
-                rankTd.innerHTML = '<i class="fas fa-medal bronze"></i>';
-            } else {
-                rankTd.textContent = `${index + 1}${getOrdinalSuffix(index + 1)}`;
-            }
-
-            // Set player name and profile image
-            nameTd.classList.add('profile');
-            nameTd.innerHTML = `
-                <div class="profile-img"><img src="Profle.png" alt="${player.name}"></div>
-                <div class="name ml-2">${player.name}</div>
-            `;
-
-            // Set player score and round off to 2 decimals
-            scoreTd.textContent = parseFloat(player.score).toFixed(2);
-
-            // Append cells to row
-            tr.appendChild(rankTd);
-            tr.appendChild(nameTd);
-            tr.appendChild(scoreTd);
-
-            // Append row to leaderboard body
-            leaderboardBody.appendChild(tr);
-        });
-
-        // Function to get ordinal suffix for a number
-        function getOrdinalSuffix(n) {
-            const s = ["th", "st", "nd", "rd"],
-                v = n % 100;
-            return s[(v - 20) % 10] || s[v] || s[0];
-        }
-    });
-</script>
 </body>
 </html>

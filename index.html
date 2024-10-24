@@ -5,6 +5,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="X-UA-Compatible" content="ie=edge">
   <title>Face Emotion Recognition Game</title>
+  <!-- Bootstrap CSS -->
+  <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+  <!-- Font Awesome for icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
   <style>
     body {
       margin: 0;
@@ -12,35 +16,52 @@
       width: 100vw;
       height: 100vh;
       display: flex;
-      flex-direction: column;
       justify-content: center;
       align-items: center;
-      overflow: hidden;
+      background-color: #f4f4f4;
     }
 
-    form {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
+    .container {
+      background-color: #fff;
+      border-radius: 10px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      padding: 30px;
+      text-align: center;
+    }
+
+    h1 {
+      color: #014a67;
     }
 
     label, input, button {
       margin: 10px;
     }
+
+    .highlight-input {
+      width: 50%; /* Adjust the width as needed */
+      border: 2px solid #014a67; /* Highlight border color */
+      box-shadow: 0 0 5px rgba(1, 74, 103, 0.5); /* Highlight shadow */
+    }
   </style>
 </head>
 <body>
-  <h1>Mimic Master</h1>
-  <h1>Welcome !</h1>
-  <form id="user-form">
-    <label for="username">Enter your username:</label>
-    <input type="text" id="username" name="username" required>
-    <h2>Game Rules:</h2>
-    <p>1. Make the expression shown on the screen.</p>
-    <p>2. You have 5 seconds to make the expression.</p>
-    <p>3. Your score will be based on how well you match the expression.</p>
-    <button type="button" id="start-button">Start Game</button>
-  </form>
+  <div class="container">
+    <h1>Mimic Master</h1>
+    <h2>Welcome!</h2>
+    <form id="user-form">
+      <div class="form-group">
+        <label for="username">Enter your Name 👇</label>
+        <input type="text" id="username" name="username" class="form-control form-control-sm mx-auto highlight-input" required>
+      </div>
+      <h3>Game Rules:</h3>
+      <ul class="list-group text-left">
+        <li class="list-group-item">1. Make the expression shown on the screen.</li>
+        <li class="list-group-item">2. You have 5 seconds to make each expression.</li>
+        <li class="list-group-item">3. Your score will be based on how well you match each expression and totalled at the end.</li>
+      </ul>
+      <button type="button" id="start-button" class="btn btn-primary mt-3">Start Game</button>
+    </form>
+  </div>
 
   <script>
     document.getElementById('start-button').addEventListener('click', () => {
@@ -51,5 +72,9 @@
       }
     });
   </script>
+  <!-- Bootstrap JS and dependencies (optional for functionality) -->
+  <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js"></script>
+  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
 </body>
 </html>
