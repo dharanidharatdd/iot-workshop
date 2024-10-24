@@ -76,8 +76,13 @@
         .then(stream => {
           video.srcObject = stream;
           videoStream = stream; // Assign the stream to the videoStream variable
+          video.play();
         })
         .catch(err => console.error(err));
+
+        video.addEventListener('loadeddata', () => {
+          video.play();
+        });
     }
 
     // Shuffle the array of expressions
@@ -275,7 +280,7 @@
       <p>Please wait, model is loading...</p>
     </div>
     <!-- Video element to display webcam feed -->
-    <video id="video" autoplay muted></video>
+    <video id="video" autoplay muted playsinline></video>
     <!-- Canvas element to draw face landmarks and captured images -->
     <canvas id="canvas"></canvas>
     <!-- Display area for current expression and counter -->
