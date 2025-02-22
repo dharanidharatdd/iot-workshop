@@ -4,9 +4,9 @@
 # Make sure you add 
 
 ## Firebase Configurations to add:
-  1. Realtime Database
-  2. Authentication
-  3. Storage
+  1. Realtime Database - To store realtime values and scores.
+  2. Authentication - To ensure succesful login in leaderboard page, create a user in firebase.
+  3. Storage - Store people's expression, which can be used to check for validity and also embarrass them 😁.
 
 ## I will be removing my API's from this code, so make sure to clone it and host it your self using github-pages.
 To configure Firebase for this project, use the following configuration:
