@@ -6,10 +6,10 @@ To configure Firebase for this project, use the following configuration:
 
 ```javascript
 const firebaseConfig = {
-  apiKey: "your-api-key",
-  authDomain: "domain",
-  databaseURL: "link",
-  projectId: "your-project-id",
+  apiKey: "",
+  authDomain: "",
+  databaseURL: "",
+  projectId: "",
   storageBucket: "",
   messagingSenderId: "",
   measurementId: ""
