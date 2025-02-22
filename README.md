@@ -40,4 +40,4 @@ Ask the players to scan the QR code below to access the link and play the game f
 
 ![QR Code for website](./assets/image.png)
 
-# If you are not able to execute it properly, don't be lazy, just use ChatGPT to solve your issues, good luck I hope you make improvements to this applications 😉.
+# If you are not able to execute it properly, don't be lazy, just use ChatGPT to solve your issues, good luck I hope you make improvements to this application 😉.
