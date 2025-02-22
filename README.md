@@ -1,7 +1,14 @@
 # IoT Workshop
 
-## Firebase Configuration
+# Note: If you want to play around with this code, go through the project once and understand it.
+# Make sure you add 
 
+## Firebase Configurations to add:
+  1. Realtime Database
+  2. Authentication
+  3. Storage
+
+## I will be removing my API's from this code, so make sure to clone it and host it your self using github-pages.
 To configure Firebase for this project, use the following configuration:
 
 ```javascript
@@ -25,10 +32,12 @@ To get this configuration from Firebase:
 
 ## Access the Leaderboard
 
-Open the [Leaderboard](https://dharanidhara.me/iot-workshop/leaderboard.html) to access the leaderboard.
+Open "your-website/iot-workshop/leaderboard.html" to access the leaderboard.
 
 ## Game Access
 
 Ask the players to scan the QR code below to access the link and play the game from their phone.
 
 ![QR Code for website](./assets/image.png)
+
+# If you are not able to execute it properly, don't be lazy, just use ChatGPT to solve your issues, good luck I hope you make improvements to this applications 😉.
